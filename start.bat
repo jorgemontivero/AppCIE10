@@ -6,7 +6,25 @@ echo  ║   App CIE-10 — Causa Básica de Defunción            ║
 echo  ╚══════════════════════════════════════════════════════╝
 echo.
 
-:: ── Verificar Python ─────────────────────────────────────────────────────
+:: ── Modo de inicio ────────────────────────────────────────────────────────
+echo  ¿Cómo desea iniciar la aplicación?
+echo.
+echo    [1]  Solo este equipo     (http://localhost:8000)
+echo    [2]  Modo red local       (accesible desde otros equipos en la red)
+echo.
+set /p MODO="  Ingrese 1 o 2 y presione Enter [1]: "
+if "%MODO%"=="" set MODO=1
+
+if "%MODO%"=="2" (
+    set HOST=0.0.0.0
+) else (
+    set MODO=1
+    set HOST=127.0.0.1
+)
+
+echo.
+
+:: ── Verificar Python ──────────────────────────────────────────────────────
 python --version >nul 2>&1
 if errorlevel 1 (
     echo  ERROR: Python no encontrado.
@@ -52,17 +70,39 @@ if not exist "frontend\dist\index.html" (
     echo  [2/3] Frontend ya construido — omitiendo.
 )
 
-:: ── Iniciar el servidor ───────────────────────────────────────────────────
-echo  [3/3] Iniciando servidor en http://localhost:8000
-echo.
-echo  ┌──────────────────────────────────────────────────────┐
-echo  │   Abrir en el navegador:  http://localhost:8000      │
-echo  │   Presione Ctrl+C para detener el servidor           │
-echo  └──────────────────────────────────────────────────────┘
+:: ── Mostrar información de acceso ─────────────────────────────────────────
+echo  [3/3] Iniciando servidor...
 echo.
 
-:: Abrir el navegador tras 2 segundos
+if "%MODO%"=="2" (
+    :: Obtener IP local
+    for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4"') do (
+        set RAW_IP=%%a
+        goto :found_ip
+    )
+    :found_ip
+    :: Quitar espacio inicial
+    for /f "tokens=* delims= " %%b in ("%RAW_IP%") do set LOCAL_IP=%%b
+
+    echo  ┌──────────────────────────────────────────────────────────────┐
+    echo  │   Este equipo:        http://localhost:8000                  │
+    echo  │   Otros en la red:    http://%LOCAL_IP%:8000               │
+    echo  │                                                              │
+    echo  │   Comparta la segunda dirección con quienes quieran         │
+    echo  │   conectarse desde la misma red WiFi o LAN.                 │
+    echo  │                                                              │
+    echo  │   Presione Ctrl+C para detener el servidor                  │
+    echo  └──────────────────────────────────────────────────────────────┘
+) else (
+    echo  ┌──────────────────────────────────────────────────────┐
+    echo  │   Abrir en el navegador:  http://localhost:8000      │
+    echo  │   Presione Ctrl+C para detener el servidor           │
+    echo  └──────────────────────────────────────────────────────┘
+)
+echo.
+
+:: Abrir el navegador en este equipo tras 2 segundos
 start "" cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:8000"
 
 :: Iniciar uvicorn
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn main:app --host %HOST% --port 8000
