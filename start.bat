@@ -13,24 +13,16 @@ echo    1  -  Solo este equipo  (localhost)
 echo    2  -  Modo red local    (otros equipos en la red)
 echo.
 
-:pedir_modo
-set MODO=
-set /p MODO=Ingrese 1 o 2 y presione Enter (Enter = 1):
-if "%MODO%"=="" set MODO=1
-if "%MODO%"=="1" goto :modo_ok
-if "%MODO%"=="2" goto :modo_ok
-echo  Opcion invalida. Ingrese 1 o 2.
-goto :pedir_modo
+choice /c 12 /n /m "Presione 1 o 2: "
 
-:modo_ok
-if "%MODO%"=="2" (
+if errorlevel 2 (
     set HOST=0.0.0.0
+    set MODO=red
 ) else (
     set HOST=127.0.0.1
+    set MODO=local
 )
 
-echo.
-echo  Modo seleccionado: %MODO%
 echo.
 
 :: ── Verificar Python ──────────────────────────────────────────────────────
@@ -84,12 +76,12 @@ if not exist "frontend\dist\index.html" (
 echo  [3/3] Iniciando servidor...
 echo.
 
-if "%MODO%"=="2" (
+if "%MODO%"=="red" (
     for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
         for /f "tokens=* delims= " %%b in ("%%a") do set LOCAL_IP=%%b
-        goto :show_red
+        goto :show_info
     )
-    :show_red
+    :show_info
     echo  -------------------------------------------------------
     echo   Este equipo  :  http://localhost:8000
     echo   Otros en red :  http://%LOCAL_IP%:8000
@@ -106,8 +98,8 @@ echo.
 echo  Presione Ctrl+C para detener el servidor.
 echo.
 
-:: Abrir el navegador tras 3 segundos
+:: Abrir el navegador en este equipo tras 3 segundos
 start "" cmd /c "timeout /t 3 /nobreak >nul && start http://localhost:8000"
 
-:: Iniciar uvicorn desde la carpeta raiz del proyecto
+:: Iniciar uvicorn
 python -m uvicorn main:app --host %HOST% --port 8000
