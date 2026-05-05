@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python --version)",
+      "PowerShell(python -m pip --version)",
+      "PowerShell(Get-Command python3 -ErrorAction SilentlyContinue; Get-Command py -ErrorAction SilentlyContinue; $env:PATH -split ';' | Where-Object { $_ -match 'python|py' })",
+      "PowerShell(py -3 --version 2>&1)",
+      "PowerShell(python3 --version 2>&1)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Jorge\\\\OneDrive\\\\Escritorio\\\\AppCIE10\" -File | Select-Object Name, @{N='Size';E={$_.Length}}, LastWriteTime | Format-Table -AutoSize)"
+    ]
+  }
+}
